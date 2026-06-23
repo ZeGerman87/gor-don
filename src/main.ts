@@ -18,10 +18,14 @@ async function main(): Promise<void> {
 
   const audio = new Audio();
   const game = new Game(vp, assets, input, audio);
-  window.addEventListener('resize', () => {
+  const relayout = (): void => {
     vp.resize();
     game.onResize();
-  });
+  };
+  window.addEventListener('resize', relayout);
+  window.addEventListener('orientationchange', relayout);
+  // The mobile address bar showing/hiding fires on the visual viewport, not window.
+  window.visualViewport?.addEventListener('resize', relayout);
   startLoop((dt) => game.update(dt), () => game.render(ctx));
 
   // Dev-only hook: step the sim deterministically (the headless preview throttles rAF).

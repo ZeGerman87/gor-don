@@ -18,9 +18,14 @@ export class Viewport {
   resize(): void {
     this.dpr = Math.min(window.devicePixelRatio || 1, 3);
     this.cssW = window.innerWidth;
-    this.cssH = window.innerHeight;
+    // Use the visual viewport height when available so the board tracks the mobile
+    // browser's address bar showing/hiding (innerHeight and CSS 100vh disagree there).
+    this.cssH = window.visualViewport ? Math.round(window.visualViewport.height) : window.innerHeight;
     this.canvas.width = Math.floor(this.cssW * this.dpr);
     this.canvas.height = Math.floor(this.cssH * this.dpr);
+    // Pin the display size to the drawing buffer so it can't be stretched by CSS 100vh.
+    this.canvas.style.width = this.cssW + 'px';
+    this.canvas.style.height = this.cssH + 'px';
 
     const topHud = 60;
     const botPad = 28;
