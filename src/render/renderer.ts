@@ -230,6 +230,16 @@ export function drawScene(
   if (!ents.bakHidden) {
     const p = moverPos(ents.bak.mover);
     const img = getAsset(assets, ents.bak.mouthOpen ? 'bak' : 'bak-closed');
-    drawSprite(ctx, img, vp.cx(p.c), vp.cy(p.r), vp.tile * 1.7, ents.bak.dir === 'left');
+    const x = vp.cx(p.c);
+    const y = vp.cy(p.r);
+    const flip = ents.bak.dir === 'left';
+    // White glow halo so the brown hero reads against same-coloured floors/walls.
+    ctx.save();
+    ctx.shadowColor = 'rgba(255,255,255,0.98)';
+    ctx.shadowBlur = vp.tile * 0.55;
+    drawSprite(ctx, img, x, y, vp.tile * 1.7, flip);
+    drawSprite(ctx, img, x, y, vp.tile * 1.7, flip);
+    drawSprite(ctx, img, x, y, vp.tile * 1.7, flip); // extra passes deepen the halo
+    ctx.restore();
   }
 }
