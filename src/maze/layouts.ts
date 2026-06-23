@@ -57,8 +57,88 @@ function buildRoom(name: string, theme: Theme, evenRaw: string, bones: Tile[]): 
     grid: rows,
     bakSpawn: { c: 9, r: 15 },
     vacuumHomes,
+    dockExit: { c: 9, r: 10 },
     scatterCorners: SCATTER_CORNERS,
     warpRows: [10],
+  };
+}
+
+/**
+ * Procedurally build a smaller themed room for the early-level difficulty ramp.
+ * Alternating open corridor rows + wall rows, vertical corridors every 4 cols
+ * (symmetric around centre), a compact central dock with 3 home slots and a door,
+ * a warp tunnel through the middle, Bak's spawn below the dock, and corner bones.
+ */
+export function smallRoom(name: string, theme: Theme, W: number, H: number): Layout {
+  const cc = (W - 1) >> 1; // centre column (door + dock centre)
+  const cr = (H - 1) >> 1; // centre row (warp tunnel)
+  const openCols: number[] = [];
+  for (let c = 1; c <= W - 2; c++) if ((c - cc) % 4 === 0) openCols.push(c);
+
+  const border = '#'.repeat(W);
+  const corr = '#' + '.'.repeat(W - 2) + '#';
+  const tunnel = '=' + '.'.repeat(W - 2) + '=';
+  const wallRow = (): string => {
+    const a = Array<string>(W).fill('#');
+    for (const c of openCols) a[c] = '.';
+    return a.join('');
+  };
+
+  const rows: string[] = [];
+  for (let r = 0; r < H; r++) {
+    if (r === 0 || r === H - 1) rows.push(border);
+    else if (r === cr) rows.push(tunnel);
+    else if (r === cr + 1 || r === cr + 2 || r === cr + 3) rows.push(corr); // dock rows, boxed below
+    else if (r % 2 === 1) rows.push(corr);
+    else rows.push(wallRow());
+  }
+  // Carve the dock box (cols cc-2..cc+2) into its three rows.
+  const top = rows[cr + 1].split('');
+  const mid = rows[cr + 2].split('');
+  const bot = rows[cr + 3].split('');
+  for (let c = cc - 2; c <= cc + 2; c++) {
+    top[c] = '#';
+    bot[c] = '#';
+  }
+  top[cc] = '-'; // door
+  mid[cc - 2] = '#';
+  mid[cc + 2] = '#';
+  mid[cc - 1] = '1';
+  mid[cc] = '2';
+  mid[cc + 1] = '3';
+  rows[cr + 1] = top.join('');
+  rows[cr + 2] = mid.join('');
+  rows[cr + 3] = bot.join('');
+  rows[cr + 4] = setChar(rows[cr + 4], cc, 'S'); // Bak spawn below the dock
+
+  // Corner bones (power-ups).
+  for (const b of [
+    { c: 1, r: 1 },
+    { c: W - 2, r: 1 },
+    { c: 1, r: H - 2 },
+    { c: W - 2, r: H - 2 },
+  ]) {
+    rows[b.r] = setChar(rows[b.r], b.c, 'o');
+  }
+
+  return {
+    name,
+    theme,
+    grid: rows,
+    bakSpawn: { c: cc, r: cr + 4 },
+    vacuumHomes: [
+      { c: cc - 1, r: cr + 2 },
+      { c: cc, r: cr + 2 },
+      { c: cc + 1, r: cr + 2 },
+    ],
+    dockExit: { c: cc, r: cr },
+    scatterCorners: {
+      roomba: { c: W - 2, r: 1 },
+      upright: { c: 1, r: 1 },
+      stick: { c: W - 2, r: H - 2 },
+      mop: { c: 1, r: H - 2 },
+    },
+    warpRows: [cr],
   };
 }
 
@@ -131,6 +211,7 @@ export const BOSS_ARENA: Layout = {
     { c: 8, r: 17 },
     { c: 10, r: 17 },
   ],
+  dockExit: { c: 9, r: 12 },
   scatterCorners: SCATTER_CORNERS,
   warpRows: [9],
 };

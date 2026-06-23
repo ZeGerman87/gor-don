@@ -23,9 +23,7 @@ type Mode = 'title' | 'ready' | 'playing' | 'dying' | 'cleared' | 'win' | 'gameo
 
 const VAC_TYPES: VacType[] = ['roomba', 'upright', 'stick', 'mop'];
 const BOSS_MINIONS: VacType[] = ['roomba', 'upright'];
-const DOCK_EXIT: Tile = { c: 9, r: 10 };
 const BOSS_CENTER: Tile = { c: 9, r: 9 };
-const BOSS_EXIT: Tile = { c: 9, r: 12 };
 const READY_TIME = 1.4;
 const DEATH_TIME = 1.1;
 const CLEAR_TIME = 1.9;
@@ -93,14 +91,14 @@ export class Game {
   private spawnVacuums(speed: number, count: number): void {
     const homes = this.layout.vacuumHomes;
     this.vacuums = VAC_TYPES.slice(0, count).map(
-      (type, i) => new Vacuum(type, homes[i % homes.length], DOCK_EXIT, speed, i * VAC_RELEASE),
+      (type, i) => new Vacuum(type, homes[i % homes.length], this.layout.dockExit, speed, i * VAC_RELEASE),
     );
   }
 
   private makeMinions(speed: number): Vacuum[] {
     const homes = this.layout.vacuumHomes;
     return BOSS_MINIONS.map((type, i) => {
-      const v = new Vacuum(type, homes[i % homes.length], BOSS_EXIT, speed, 0);
+      const v = new Vacuum(type, homes[i % homes.length], this.layout.dockExit, speed, 0);
       v.state = 'chase'; // minions are immediately active in the arena
       return v;
     });
@@ -112,6 +110,10 @@ export class Game {
     this.isBoss = plan.isBoss;
     this.layout = plan.layout;
     this.maze = new Maze(this.layout.grid);
+    this.vp.cols = this.maze.cols;
+    this.vp.rows = this.maze.rows;
+    this.vp.resize();
+    this.joystick.setLayout(this.vp);
     const diff = difficulty(index);
     this.bak = new Bak(this.layout.bakSpawn, diff.bakSpeed);
     this.frightenedSecs = diff.frightenedMs / 1000;

@@ -8,6 +8,7 @@ export interface Layout {
   grid: string[];
   bakSpawn: Tile;
   vacuumHomes: Tile[];
+  dockExit: Tile; // tile just above the dock door that leaving vacuums head for
   scatterCorners: Record<VacType, Tile>;
   warpRows: number[];
 }
